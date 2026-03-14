@@ -26,7 +26,7 @@ departments = spark.createDataFrame([
 ], ["department", "base_volume"]
 )
 # Cross Join so every date has a row for every department
-df_base = df_dates.crossJoin(spark.createDataFrame(departments))
+df_base = df_dates.crossJoin(departments)
 
 # 3. Engineer Seasonality, Trends, and Noise
 #Day of Week Seasonality: Mondays have a massive spike in calls, while weekends are dead.
