@@ -97,9 +97,9 @@ def forecast_department(history_pd: pd.DataFrame) -> pd.DataFrame:
         error_df = pd.DataFrame({
             'department': [f"ERROR: {str(e)}"],
             'ds': [pd.to_datetime('2025-01-01').date()],  
-            'yhat': [None],
-            'yhat_lower': [None],
-            'yhat_upper': [None]
+            'yhat': [-1.0],
+            'yhat_lower': [-1.0],
+            'yhat_upper': [-1.0]
         })
         return error_df
 
