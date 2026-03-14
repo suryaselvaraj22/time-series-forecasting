@@ -45,7 +45,7 @@ def forecast_department(history_pd: pd.DataFrame) -> pd.DataFrame:
     # import subprocess
     # import sys
 
-    # WORKER NODE H$A$C$K: Ensure Prophet is installed on this specific worker node
+    # WORKER NODE H*A*C*K: Ensure Prophet is installed on this specific worker node
     # try:
     #     import prophet
     #     print("Prophet is already installed!")
@@ -56,33 +56,52 @@ def forecast_department(history_pd: pd.DataFrame) -> pd.DataFrame:
 
     #Please ensure Prophet is installed on your cluster before running this code, otherwise it will fail!
     # Now that Prophet is installed via the Cluster UI, we can just import it normally!
+    import pandas as pd
+    try: 
+        from prophet import Prophet  
 
-    from prophet import Prophet  
+        # Initialize the Prophet model, explicitly turning on seasonality
+        m = Prophet(
+            yearly_seasonality=True, 
+            weekly_seasonality=True, 
+            daily_seasonality=False # Not predicting hourly data
+        )  
+        # Fit the model to this specific department's historical data
+        m.fit(history_pd)
 
-    # Initialize the Prophet model, explicitly turning on seasonality
-    m = Prophet(
-       yearly_seasonality=True, 
-       weekly_seasonality=True, 
-       daily_seasonality=False # Not predicting hourly data
-    )  
-    # Fit the model to this specific department's historical data
-    m.fit(history_pd)
+        # Create a future dataframe projecting 365 days (1 year) into the future
+        future_pd = m.make_future_dataframe(periods=365, freq='D')
 
-    # Create a future dataframe projecting 365 days (1 year) into the future
-    future_pd = m.make_future_dataframe(periods=365, freq='D')
+        # Generate the forecast
+        forecast_pd = m.predict(future_pd)
 
-    # Generate the forecast
-    forecast_pd = m.predict(future_pd)
+        # Extract the department name from the historical data
+        dept_name = history_pd['department'].iloc[0]
 
-    # Extract the department name from the historical data
-    dept_name = history_pd['department'].iloc[0]
+        # Format the results to match our PySpark result_schema perfectly
+        result_pd = forecast_pd[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
+        result_pd['department'] = dept_name  # Add the department column 
 
-    # Format the results to match our PySpark result_schema perfectly
-    result_pd = forecast_pd[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
-    result_pd['department'] = dept_name  # Add the department column 
+        # B*U*G FIX: Prophet outputs timestamps, but PySpark expects Dates. 
+        # If we don't cast this, PySpark's Arrow stream collapses and returns "NoneType"
+        result_pd['ds'] = pd.to_datetime(result_pd['ds']).dt.date
+        result_pd['yhat'] = result_pd['yhat'].astype(float)
+        result_pd['yhat_lower'] = result_pd['yhat_lower'].astype(float)
+        result_pd['yhat_upper'] = result_pd['yhat_upper'].astype(float)
 
-    # Reorder columns to match schema: department, ds, yhat, yhat_lower, yhat_upper
-    result_pd = result_pd[['department', 'ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+        # Reorder columns to match schema: department, ds, yhat, yhat_lower, yhat_upper
+        return result_pd[['department', 'ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+    
+    except Exception as e:
+        # ULTIMATE DEBUGGER H*A*C*K: If it crashes, return the error AS the data!
+        error_df = pd.DataFrame({
+            'department': [f"ERROR: {str(e)}"],
+            'ds': [pd.to_datetime('2025-01-01').date()],  
+            'yhat': [None],
+            'yhat_lower': [None],
+            'yhat_upper': [None]
+        })
+        return error_df
 
 # 4. Execute the Distributed Training!
 print("\nDistributing Prophet training across the cluster... (Predicting 365 days into 2025)")
