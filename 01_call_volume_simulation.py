@@ -19,12 +19,12 @@ df_dates = spark.createDataFrame([(1,)]).select(
 )
 
 # 2. Define our Call Center Departments
-departments = [
-    ("Billing", 1500),
-    ("Tech Support", 2500),
-    ("Claims", 800)
+departments = spark.createDataFrame([
+    ("Billing", 1500), # Base volume of 1500 calls/day
+    ("Tech Support", 2500), # Base volume of 2500 calls/day
+    ("Claims", 800) # Base volume of 800 calls/day
 ], ["department", "base_volume"]
-
+)
 # Cross Join so every date has a row for every department
 df_base = df_dates.crossJoin(spark.createDataFrame(departments))
 
