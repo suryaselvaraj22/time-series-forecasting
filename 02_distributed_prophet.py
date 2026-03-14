@@ -2,6 +2,18 @@
 # Objective: Train a Time-Series forecasting model for each Call Center Department.
 # We use PySpark Pandas UDFs to train all department models simultaneously in parallel across the cluster!
 
+# Tried for fun: We can install packages on the Driver Node, but it's useless here because the worker nodes won't have Prophet anyway!
+#import subprocess
+#import sys
+
+#try:
+    #import prophet
+    #print("Prophet is already installed!")
+#except ImportError:
+    #print("Prophet not found. Installing now...")
+    #subprocess.check_call([sys.executable, "-m", "pip", "install", "prophet"])
+    #print("Prophet installation complete!")
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, when, rand, randn, round, exp, abs, avg
 from pyspark.sql.types import StructType, StructField, StringType, DateType, DoubleType
@@ -29,17 +41,21 @@ result_schema = StructType([
 # 3. Define the Python/Pandas function that will run on EACH worker node
 # This function receives a single Pandas DataFrame containing exactly ONE department's history.
 def forecast_department(history_pd: pd.DataFrame) -> pd.DataFrame:
-    import subprocess
-    import sys
+    # Again, tried for fun: As expected Worker Nodes can't install packages because they don't have sudo privileges! 
+    # import subprocess
+    # import sys
 
     # WORKER NODE H$A$C$K: Ensure Prophet is installed on this specific worker node
-    try:
-        import prophet
-        print("Prophet is already installed!")
-    except ImportError:
-        print("Prophet not found. Installing now...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "prophet"])
-        print("Prophet installation complete!")
+    # try:
+    #     import prophet
+    #     print("Prophet is already installed!")
+    # except ImportError:
+    #     print("Prophet not found. Installing now...")
+    #     subprocess.check_call([sys.executable, "-m", "pip", "install", "prophet"])
+    #     print("Prophet installation complete!")
+
+    #Please ensure Prophet is installed on your cluster before running this code, otherwise it will fail!
+    # Now that Prophet is installed via the Cluster UI, we can just import it normally!
 
     from prophet import Prophet  
 
