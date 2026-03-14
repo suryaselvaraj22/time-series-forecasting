@@ -2,8 +2,17 @@
 # Objective: Train a Time-Series forecasting model for each Call Center Department.
 # We use PySpark Pandas UDFs to train all department models simultaneously in parallel across the cluster!
 
-# Run this in a separate cell first if Prophet is not installed on your cluster:
-# %pip install prophet
+# 0. Ensure Prophet is installed (Robust method for raw .py scripts)
+import subprocess
+import sys
+
+try:
+    import prophet
+    print("Prophet is already installed!")
+except ImportError:
+    print("Prophet not found. Installing now...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "prophet"])
+    print("Prophet installation complete!")
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, when, rand, randn, round, exp, abs, avg
